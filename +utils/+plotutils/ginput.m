@@ -62,7 +62,7 @@ initialState = setupFcn(fig);
 % completion, closing of figure errors or ctrl+c.
 c = onCleanup(@() restoreFcn(initialState));
 
-drawnow
+drawnow limitrate
 char = 0;
 
 while how_many ~= 0
@@ -111,7 +111,7 @@ while how_many ~= 0
             end
         end
         axes_handle = gca;
-        drawnow;
+        drawnow limitrate;
         pt = get(axes_handle, 'CurrentPoint');
         
         how_many = how_many - 1;
@@ -176,7 +176,7 @@ try
 catch %#ok<CTCH>
     waserr = 1;
 end
-drawnow;
+drawnow limitrate;
 if(waserr == 1)
     set(h,'Accelerator','C');                          % Set back the accelerator if it errored out.
     error(message('MATLAB:ginput:Interrupted'));

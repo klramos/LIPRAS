@@ -380,17 +380,32 @@ classdef AxPlotter < matlab.mixin.SetGet
         function line = plotFittedPeak(this, ax, fitted, fcnID)
         %plotFittedPeak     Returns a line object that represents the fit for the function number
         %   specified by fcnID.
+        Bkg_LS=this.profiles.xrd.BkgLS;
         fcns = fitted.FunctionNames;
         line = findobj(ax, 'tag', ['f' num2str(fcnID)]);
         if isempty(line)
+            if Bkg_LS % plotting of Bkg in LS
+                            line = plot(ax, fitted.TwoTheta, fitted.FPeaks(fcnID,:)+fitted.Background, ...
+                        'LineWidth',1,...
+                        'DisplayName',['(' num2str(fcnID) ') ' fcns{fcnID}], ...
+                        'Tag', ['f' num2str(fcnID)],...
+                        'Visible', 'off');
+            else
+                
             line = plot(ax, fitted.TwoTheta, fitted.FPeaks(fcnID,:)+fitted.Background, ...
                         'LineWidth',1,...
                         'DisplayName',['(' num2str(fcnID) ') ' fcns{fcnID}], ...
                         'Tag', ['f' num2str(fcnID)],...
                         'Visible', 'off');
+            end
         else
+            if Bkg_LS % plotting if Bkg in LS
+                            set(line, 'XData', fitted.TwoTheta, ...
+                      'YData', fitted.FPeaks(fcnID,:)+fitted.Background);
+            else
             set(line, 'XData', fitted.TwoTheta, ...
                       'YData', fitted.FPeaks(fcnID,:)+fitted.Background);
+            end
         end
         if fitted.CuKa
             kaLine = findobj(ax, 'tag', ['cuka' num2str(fcnID)]);
@@ -423,16 +438,31 @@ classdef AxPlotter < matlab.mixin.SetGet
         
         function line = plotOverallFit(this, ax, fitted)
         line = findobj(ax, 'tag', 'OverallFit');
+        Bkg_LS=this.profiles.xrd.BkgLS;
         if isempty(line)
+            if Bkg_LS
+                            line = plot(ax, fitted.TwoTheta, fitted.FData, ...
+                        'k','LineWidth',1,...
+                        'DisplayName','Overall Fit',...
+                        'Color',[0 0.5 0], ...
+                        'Tag', 'OverallFit',...
+                        'Visible', 'off'); % Overall Fit
+            else
             line = plot(ax, fitted.TwoTheta, fitted.FData+fitted.Background, ...
                         'k','LineWidth',1,...
                         'DisplayName','Overall Fit',...
-                        'Color',[0 0 0], ...
+                        'Color',[0 0.5 0], ...
                         'Tag', 'OverallFit',...
                         'Visible', 'off'); % Overall Fit
+            end
         else
+            if Bkg_LS
+                            set(line, 'XData', fitted.TwoTheta, ...
+                      'YData', fitted.FData,'LineWidth',1.4,'Color',[.0 .5 .0]);
+            else
             set(line, 'XData', fitted.TwoTheta, ...
-                      'YData', fitted.FData+fitted.Background);
+                      'YData', fitted.FData+fitted.Background,'LineWidth',1.4,'Color',[.0 .5 .0]);
+            end
         end
         setappdata(line,'xdata',line.XData);
         setappdata(line,'ydata',line.YData);
@@ -440,13 +470,20 @@ classdef AxPlotter < matlab.mixin.SetGet
         end
        
         function line = plotFitErr(this, ax, fitted)
+        Bkg_LS=this.profiles.xrd.BkgLS;
         if nargin < 1
             ax = this.axerr;
         end
         cla(ax)
+        if Bkg_LS
+                    line = plot(ax, fitted.TwoTheta, fitted.Intensity - (fitted.FData), ...
+                    'r', 'Tag', 'error', ...
+                    'visible','off','LineWidth',1); 
+        else
         line = plot(ax, fitted.TwoTheta, fitted.Intensity - (fitted.FData+fitted.Background), ...
                     'r', 'Tag', 'error', ...
-                    'visible','off'); 
+                    'visible','off','LineWidth',1); 
+        end
         set(ax, 'LineWidth', 1, ...
                 'XLim', [min(fitted.TwoTheta) max(fitted.TwoTheta)]);
         setappdata(line,'xdata',line.XData);
@@ -471,7 +508,7 @@ classdef AxPlotter < matlab.mixin.SetGet
             case 'dspace'
                 set([axx.XLabel], 'String', ['D-Space (' char(197) ')']);
         end
-        drawnow
+        drawnow limitrate % limit rate added for speed
         warning(state.state, state.identifier);
         end
         
@@ -513,7 +550,7 @@ classdef AxPlotter < matlab.mixin.SetGet
             case 'sqrt'
                 set([axx.YLabel], 'Interpreter', 'latex', 'String', '$$\sqrt{Intensity}$$ (a.u.)');
         end
-        drawnow
+        drawnow limitrate
         warning(state.state, state.identifier);
         end
         
@@ -548,9 +585,11 @@ classdef AxPlotter < matlab.mixin.SetGet
             mode='na';
         end
         
+        if strcmp(mode,'sample')
+        else        
         this.updateXLim(axx);
         this.updateYLim(axx);
-        
+        end
         this.title;
         end
         
@@ -585,7 +624,7 @@ classdef AxPlotter < matlab.mixin.SetGet
                 title(axx, varargin{:});
             end
         end
-        drawnow
+        drawnow limitrate
         warning(state.state, state.identifier);
         end
             

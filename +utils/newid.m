@@ -327,7 +327,7 @@ if ~isempty(gcbf) && strcmp(get(gcbf,'WindowStyle'),'modal')
 end
 
 set(InputFig,'Visible','on');
-drawnow;
+drawnow limitrate;
 
 if ~isempty(EditHandle)
     uicontrol(EditHandle(1));

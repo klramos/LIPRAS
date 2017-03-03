@@ -330,7 +330,9 @@ classdef FitFunctionInterface < handle
         import model.fit.*
         import utils.*
         initial = this.getDefaultInitialValues(data, peakpos);
-        xoffset = (data(1,end) - data(1,1)) ./ 4;
+        
+        xoffset = (data(1,end) - data(1,1)) ./ 10;
+
         result.x = peakpos - xoffset;
         result.N = 0;
         result.f = 0.01;
@@ -342,7 +344,7 @@ classdef FitFunctionInterface < handle
         import model.fit.*
         import utils.*
         initial = this.getDefaultInitialValues(data, peakpos);
-        xoffset = (data(1,end) - data(1,1)) ./ 4;
+        xoffset = (data(1,end) - data(1,1)) ./ 10;
         result.x = peakpos + xoffset;
         result.N = initial.N * 2;
         result.f = initial.f * 2;

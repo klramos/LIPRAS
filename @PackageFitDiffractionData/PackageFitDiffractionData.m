@@ -69,16 +69,17 @@ classdef PackageFitDiffractionData < matlab.mixin.Copyable & matlab.mixin.SetGet
         suffix   = '';
         CuKa2Peak
         KAlpha1_ = 1.540000;
-        KAlpha2_ = 1.544426; % nm
+        KAlpha2_ = 1.544426; % Å
         symdata = 0;
         binID = 1:1:24;
         lambda = 1.5405980;
         OutputPath = ['FitOutputs' filesep];
         numAzim
         recycle_results = 0;
+        ignore_bounds=0;
+        BkgLS=0;
     end
     
-    % ======================================================================== %
     methods
         function Stro = PackageFitDiffractionData(data, filenames, path)
         % Constructor
@@ -115,7 +116,6 @@ classdef PackageFitDiffractionData < matlab.mixin.Copyable & matlab.mixin.SetGet
         
         end
         
-        % ==================================================================== %
     end
     
     methods
@@ -558,23 +558,102 @@ classdef PackageFitDiffractionData < matlab.mixin.Copyable & matlab.mixin.SetGet
         % Assumes that Stro.FitFunctions is not empty
         coeffs = Stro.getCoeffs;
         eqnStr = Stro.getEqnStr;
-        result = fittype(eqnStr, 'coefficients', coeffs, 'independent', 'xv');
+        Stro.BkgLS=0; % This is where BkgLS is turned on right now, 3-2-2017
+        
+        % To include or not to include Bkg in LS
+        if Stro.BkgLS
+        for p=1:Stro.getBackgroundOrder+1
+        vars{:,p}=strcat('a',num2str(p));
+        vars4(:,p)=sym(strcat('a',num2str(p)));
+        end
+        syms xv
+        PolyM=char(poly2sym(vars4,xv)); % generates the string poly to add to PF     
+        EqnLS=strcat(PolyM,'+',eqnStr);
+        coeffsLS=[vars coeffs];
+        result = fittype(EqnLS, 'coefficients', coeffsLS, 'independent', 'xv');
+        else
+        
+        % NO bkg in LS
+        result = fittype(eqnStr, 'coefficients', coeffs, 'independent', 'xv'); 
+        end
+        
         end
         % ==================================================================== %
                         
-        function s = getFitOptions(Stro)
+        function s = getFitOptions(Stro,RecycleSP)
         %FITDATA_ Helper function for fitDataSet. Fits a single file.
-        SP = Stro.FitInitial.start;
-        LB = Stro.FitInitial.lower;
-        UB = Stro.FitInitial.upper;
-        intensity = Stro.getData;
-        intensity(intensity==0) = 1;
-        weight = 1./intensity;
+        
+        % To include or not to include Bkg in LS
+        if Stro.BkgLS
+        
+        % Approx Back Coefficient, based on selected bkg points, need a way
+        % to override if user selects a higher poly order than number of
+        % points selected
+        bkgp=Stro.getBackgroundPoints; 
+        bkgdat=Stro.getData;
+        for bp=1:length(Stro.getBackgroundPoints)
+        ibkg(bp)=FindValue(Stro.getTwoTheta,bkgp(bp));
+        bkgd(bp)=bkgdat(ibkg(bp));
+        end       
+        [p,~,~] = polyfit(bkgp,bkgd,Stro.getBackgroundOrder);
+        end
+        
+        % For Recycle Results
+        if Stro.recycle_results        
+            % To include or not to include Bkg in LS
+            if Stro.BkgLS
+                % Bkg in LS         
+                SP = Stro.FitInitial.start;
+                LB = [-abs(p)*10 Stro.FitInitial.lower];
+                UB = [abs(p)*10 Stro.FitInitial.upper];
+            else
+                if length(Stro.FitInitial.coeffs)<length(Stro.FitInitial.start) % when coming from BkgLS to noBkgLS
+                    dif=length(Stro.FitInitial.start)-length(Stro.FitInitial.coeffs); % better than bkgorder since it can change i believe
+                    Stro.FitInitial.start(1:dif)=[];
+%                     Stro.FitInitial.lower(1:dif)=[];
+%                     Stro.FitInitial.upper(1:dif)=[];
+                end
+                % NO bkg in LS
+                SP = [Stro.FitInitial.start];
+                LB = [Stro.FitInitial.lower];
+                UB = [Stro.FitInitial.upper];
+                
+            end
+        else
+                        if Stro.BkgLS
+                                if length(Stro.FitInitial.coeffs)<length(Stro.FitInitial.start) % when hitting BkgLS sequentially
+                                dif=length(Stro.FitInitial.start)-length(Stro.FitInitial.coeffs);
+                                Stro.FitInitial.start(1:dif)=[];
+                                end
+        % Bkg in LS
+        SP = [p Stro.FitInitial.start];
+        LB = [-abs(p)*10 Stro.FitInitial.lower];
+        UB = [abs(p)*10 Stro.FitInitial.upper];
+                        else
+        % NO bkg in LS
+        SP = [Stro.FitInitial.start];
+        LB = [Stro.FitInitial.lower];
+        UB = [Stro.FitInitial.upper];
+                        end
+        
+        end
+
+
+        weight = 1./Stro.getData;
+        if Stro.ignore_bounds
+             s = fitoptions('Method', 'NonlinearLeastSquares', ...
+            'StartPoint', SP, ...                 
+            'Algorithm','Levenberg-Marquardt','Weight',weight,'DiffMinChange',...
+            10E-9,'DiffMaxChange',0.001,'MaxIter',1000);
+        else
         s = fitoptions('Method', 'NonlinearLeastSquares', ...
-            'StartPoint', SP, ...
-            'Lower', LB, ...
+            'StartPoint', SP, ...                 
+             'Lower', LB, ...
             'Upper', UB, ...
-            'Weight',weight);
+            'Weight',weight,'DiffMinChange',...
+            10E-9,'DiffMaxChange',0.001,'MaxIter',1000);
+        end
+
         end
         
         function position2 = Ka2fromKa1(Stro, position1)

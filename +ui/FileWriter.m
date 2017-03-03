@@ -106,12 +106,12 @@ classdef FileWriter < handle
        if ~isempty(fitted.KAlpha1)
            fprintf(fid, '\nCu-KAlpha1: %f\n', fitted.KAlpha1);
        else
-           fprintf(fid, 'Cu-KAlpha1: n/a\n');
+           fprintf(fid, '\nCu-KAlpha1: n/a\n');
        end
        if fitted.CuKa
            fprintf(fid, 'Cu-KAlpha2: %f\n', fitted.KAlpha2);
        else
-           fprintf(fid, '\nCu-Kalpha2: n/a\n');
+           fprintf(fid, '\nCu-KAlpha2: n/a\n');
        end
        
        fprintf(fid,'\nFitFunction(s):\n');

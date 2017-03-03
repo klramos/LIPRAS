@@ -101,13 +101,29 @@ end
         this.PeakPositions = xrd.PeakPositions;
         this.Constraints = xrd.getConstraints;
         this.FitType       = xrd.getFitType;
+        
+        if and(filenumber>1,xrd.recycle_results==1)
+            this.FitOptions    = xrd.getFitOptions;
+        elseif filenumber==1 && xrd.BkgLS && xrd.recycle_results
+            xrd.recycle_results=0;
+            this.FitOptions    = xrd.getFitOptions;
+            xrd.recycle_results=1;
+        else
         this.FitOptions    = xrd.getFitOptions;
+        end
         this.CoeffNames    = coeffnames(this.FitType)';
         this.FitFunctions  = xrd.getFunctions;
-        
+%         disp(this.FitOptions.StartPoint) % to check SP being recycled
+
+        if xrd.BkgLS
+                    [fmodel, fmodelgof] = fit(this.TwoTheta', ...
+                                 (this.Intensity)', ...
+                                  this.FitType, this.FitOptions);
+        else
         [fmodel, fmodelgof] = fit(this.TwoTheta', ...
                                  (this.Intensity - this.Background)', ...
                                   this.FitType, this.FitOptions);
+        end
         fmodelci = confint(fmodel, this.CONFIDENCE_LEVEL);
         
         this.Fmodel    = fmodel;
@@ -127,8 +143,17 @@ end
                 this.FCuKa2Peaks(i,:) = peak(2,:);
             end
         end
-        this.FitInitial.coeffs = this.CoeffNames;
+        
+        if and(filenumber>1,xrd.recycle_results==1)
+        xrd.FitInitial.start=this.CoeffValues;
+        elseif filenumber==1 && xrd.BkgLS && xrd.recycle_results
+            xrd.FitInitial.start = this.CoeffValues;
+        else
         this.FitInitial.start = this.FitOptions.StartPoint;
+        end
+            
+        
+        this.FitInitial.coeffs = this.CoeffNames;
         this.FitInitial.lower = this.FitOptions.Lower;
         this.FitInitial.upper = this.FitOptions.Upper;
         end

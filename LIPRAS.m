@@ -15,6 +15,15 @@ if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
 
+% v=ver;
+% if any(strcmp(cellstr(char(v.Name)),'GUI Layout Toolbox'))~=1
+% 
+%    open 'GUI Layout Toolbox\GUI Layout Toolbox 2.3.1.mltbx';
+% else % Means it is installed
+%     
+% end
+
+
 if nargout
     [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
 else
@@ -362,9 +371,14 @@ function push_fitdata_Callback(~, ~, handles)
 try
     prfn = handles.profiles.ActiveProfile;    
     fitresults = handles.profiles.fitDataSet(prfn);
+
     if ~isempty(fitresults)
         ui.update(handles, 'results');
-        utils.plotutils.plotX(handles,'fit');
+        if handles.profiles.xrd.BkgLS
+            utils.plotutils.plotX(handles,'BkgLSFit');
+        else
+            utils.plotutils.plotX(handles,'fit');
+        end
     else
         utils.plotutils.plotX(handles,'sample');
     end
@@ -407,9 +421,12 @@ end
 
 function checkbox_recycle_Callback(o, e, handles) %#ok<*DEFNU>
 if get(o, 'value')
-    handles.xrd.recycle_results = 1;
+  handles.xrd.recycle_results = 1;
+  handles.profiles.xrd.recycle_results=1;
 else
-    handles.xrd.recycle_results = 0;
+  handles.xrd.recycle_results = 0;
+  handles.profiles.xrd.recycle_results=0;
+
 end
 
 

@@ -396,12 +396,12 @@ this.xrd.PeakPositions(1:end)=0;
        end
        this.xrd.Min2T = min;
        this.xrd.Max2T = max;
-       if ~isempty(ka1)
-           this.xrd.KAlpha1 = ka1;
-       end
        if ~isempty(ka2)
            this.xrd.KAlpha2 = ka2;
            this.xrd.CuKa = true;
+       end
+        if ~isempty(ka1)
+         this.xrd.KAlpha1 = ka1;
        end
        this.xrd.setBackgroundModel(model);
        this.xrd.setBackgroundOrder(polyorder);
@@ -453,11 +453,11 @@ this.xrd.PeakPositions(1:end)=0;
             this.Status = ['Fitting dataset ' num2str(i) ' of ' num2str(this.NumFiles) '...'];
             try
                 % stop the fit if the user closes the msgbox
-                if ~isvalid(msg)
-                    this.Status = 'Stopped fitting dataset.';
-                    fitresults = [];
-                    return
-                end
+%                 if ~isvalid(msg)
+%                     this.Status = 'Stopped fitting dataset.';
+%                     fitresults = [];
+%                     return
+%                 end
                 fitresults{i} = model.FitResults(this, i);
             catch exception
                 delete(msg)
