@@ -412,20 +412,6 @@ else
     handles.xrd.recycle_results = 0;
 end
 
-% Superimpose raw data.
-function checkbox_superimpose_Callback(hObject, eventdata, handles)
-cla(handles.axes1)
-% If box is checked, turn on hold in axes1
-if get(hObject,'Value')
-    hold(handles.axes1, 'on')
-    handles.axes1.ColorOrderIndex = 1;
-    utils.plotutils.plotX(handles, 'superimpose');
-else
-    utils.plotutils.plotX(handles);
-end
-handles.gui.Legend = 'reset';
-handles.xrd.Status='Superimposing raw data...';
-
 
 %% Popup callback functions
 
@@ -463,6 +449,18 @@ handles.gui.Legend = 'on';
 handles.gui.Legend = 'reset';
 
 %% Menu callback functions
+function menuPlot_superimpose_Callback(hObject, eventdata, handles)
+cla(handles.axes1)
+% If box is checked, turn on hold in axes1
+if strcmp(hObject.Checked, 'on')
+    hold(handles.axes1, 'on')
+    handles.axes1.ColorOrderIndex = 1;
+    utils.plotutils.plotX(handles, 'superimpose');
+    handles.xrd.PriorityStatus='Superimposing raw data...';
+else
+    utils.plotutils.plotX(handles);
+end
+handles.gui.Legend = 'reset';
 
 function menu_save_Callback(~, ~, handles)
 if handles.profiles.hasFit
