@@ -358,7 +358,7 @@ classdef GUIController < handle
         profiles = this.hg.profiles;
         if isempty(profiles.xrd)
             return
-        end        
+        end
         this.hg.edit_min2t.String = sprintf('%.3f', value);
         end
         

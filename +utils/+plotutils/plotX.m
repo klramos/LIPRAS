@@ -22,22 +22,13 @@ try
         end
     end
     
-%     if strcmpi(mode, 'fit') && (~handles.profiles.hasFit || handles.gui.isFitDirty)
-%         mode = 'sample';
-%     end
-    
     handles.checkbox_superimpose.Value = 0;
     % try
     
     % Disable the figure while its plotting
     focusedObj = gco;
-    enabledObjs = findobj(handles.figure1, 'Enable', 'on');
-    for ii=1:length(enabledObjs)
-        try
-            set(enabledObjs(ii), 'Enable', 'inactive');
-        catch
-        end
-    end
+    enabledObjs = findobj(handles.figure1, 'Enable', 'on', 'style', 'listbox');
+    set(enabledObjs, 'enable', 'inactive');
     
     switch lower(mode)
         case 'data'
@@ -81,12 +72,13 @@ try
         case 'stats' %TODO
             plotFitStats(handles);
     end
+        
     set(enabledObjs, 'Enable', 'on');
     currentFig = get(0,'CurrentFigure');
     if ~isempty(currentFig) && contains(currentFig.Name, 'LIPRAS') && ~isempty(focusedObj)
         if strcmpi(focusedObj.Type, 'uitable')
             uitable(focusedObj);
-        elseif strcmpi(focusedObj.Type, 'uicontrol')
+        elseif strcmpi(focusedObj.Style, 'listbox')
             uicontrol(focusedObj);
         end
     end
@@ -106,9 +98,6 @@ catch ex
 end
 
 % ==============================================================================
-
-
-
 
     function dataLine = plotData(handles, axx,j)
     % PLOTDATA Plots the raw data for a specified file number in axes1. 
@@ -250,6 +239,7 @@ end
     if ~isempty(lines)
         delete(lines(notDataLineIdx));
     end
+    set(handles.axes1.Children, 'visible', 'off');
     handles.checkbox_superimpose.Value = 1;
     activeFileLinePlot = findobj(handles.axes1, 'DisplayName', filenames{filenum});
     if isempty(activeFileLinePlot)

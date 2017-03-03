@@ -475,7 +475,20 @@ classdef AxPlotter < matlab.mixin.SetGet
         warning(state.state, state.identifier);
         end
         
+%         function restoreZoomState(ax, zoomstate)
+%         zoomlim = getappdata(ax, 'zoom_zoomOrigAxesLimits');
+%         if isempty(zoomstate)
+%             % TODO
+%         end
+%         set(ax, 'XLim', zoomlim(1:2), 'YLim', zoomlim(3:4));
+%         end
+        
         function updateXLim(this, axx)
+        h=guidata(axx);
+        zoomstate = getappdata(h.figure1, 'ZoomOnState');
+        if isequal(zoomstate, 'on')
+            return
+        end
         if isempty([axx.Children]), return, end
         xrange = [this.profiles.Min2T this.profiles.Max2T];
         switch this.XScale
@@ -484,6 +497,7 @@ classdef AxPlotter < matlab.mixin.SetGet
             case 'dspace'
                 set(axx, 'XLim', sort(this.profiles.dspace(xrange)));
         end
+        zoom(h.figure1, 'reset');
         end
         
         function updateYLabel(this, axx)
@@ -506,6 +520,11 @@ classdef AxPlotter < matlab.mixin.SetGet
         function updateYLim(this, axx)
         %updateYAxis modifies the y-axis limits based on the minimum and maximum values of the
         %   plotted lines.
+        h=guidata(axx);
+        zoomstate = getappdata(h.figure1, 'ZoomOnState');
+        if isequal(zoomstate, 'on')
+            return
+        end
         if isempty([axx.Children]), return, end
         ydata = get(findobj(axx, 'tag', 'raw'), 'YData');
         if isempty(ydata)
