@@ -1,3 +1,4 @@
+**/FitOutputs/**
 FitOutputs/**
 Preferences/**
 Copies/**
@@ -5,6 +6,7 @@ Copies/**
 startup.m
 finish.m
 *.Fdata
+*.Fmodel
 *.mat
 *.txt
 *.asv
